@@ -571,6 +571,8 @@ class Client(api.BaseHandler):
         elif result := params.get("result"):
             LOGGER.info(result)
 
+        return None
+
     @wait_initialized
     def textdocument_declaration(self, file_name, row, col):
         if document := self.working_documents.get(file_name):
