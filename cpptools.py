@@ -327,6 +327,7 @@ class Client(api.BaseHandler):
         # only one thread can run server
         with self.run_server_lock:
             if not self.transport.is_running():
+                sublime.status_message("running clangd...")
                 self.transport.run_server()
 
     def exit(self):
