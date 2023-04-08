@@ -545,21 +545,16 @@ class Client(api.BaseHandler):
         )
 
     def _apply_edit(self, edit: dict):
-        try:
-            for file_uri, changes in edit["changes"].items():
-                DOCUMENT_CHAGE_EVENT.clear()
-                file_name = api.uri_to_path(file_uri)
-                document = self.working_documents.get(
-                    file_name, UnbufferedDocument(file_name)
-                )
-                document.apply_text_changes(changes)
-                # wait until changes applied
-                DOCUMENT_CHAGE_EVENT.wait()
-                document.save()
-
-        except Exception as err:
-            LOGGER.exception(err)
-            raise err
+        for file_uri, changes in edit["changes"].items():
+            DOCUMENT_CHAGE_EVENT.clear()
+            file_name = api.uri_to_path(file_uri)
+            document = self.working_documents.get(
+                file_name, UnbufferedDocument(file_name)
+            )
+            document.apply_text_changes(changes)
+            # wait until changes applied
+            DOCUMENT_CHAGE_EVENT.wait()
+            document.save()
 
     def handle_workspace_applyedit(self, params: dict) -> dict:
         try:
