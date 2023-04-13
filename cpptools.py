@@ -172,6 +172,13 @@ class BufferedDocument:
         return api.path_to_uri(self.file_name)
 
     @property
+    def language_id(self) -> str:
+        if self.view.match_selector(0, "source.c++"):
+            return "cpp"
+        if self.view.match_selector(0, "source.c"):
+            return "c"
+
+    @property
     def window(self) -> sublime.Window:
         return self.view.window()
 
@@ -381,7 +388,7 @@ class Client(api.BaseHandler):
             "textDocument/didOpen",
             {
                 "textDocument": {
-                    "languageId": "cpp",
+                    "languageId": self.active_document.language_id,
                     "text": self.active_document.text,
                     "uri": self.active_document.document_uri(),
                     "version": self.active_document.version,
@@ -722,7 +729,11 @@ def plugin_unloaded():
 
 
 def valid_context(view: sublime.View, point: int):
-    return view.match_selector(point, "source.c++")
+    if view.match_selector(point, "source.c++"):
+        return True
+    if view.match_selector(point, "source.c"):
+        return True
+    return False
 
 
 def get_workspace_path(view: sublime.View) -> str:
