@@ -200,14 +200,20 @@ class BufferedDocument:
             return COMPLETION_KIND_MAP[kind_num]
 
         def build_completion(completion: dict):
-            # sublime text has complete the header bracket '<> or ""'
-            # remove it from clangd result
-            text = completion["insertText"].rstrip('>"')
-            annotation = completion["label"].rstrip('>"')
+            trigger = completion["filterText"]
+            text = completion["insertText"]
+            annotation = completion["label"]
             kind = convert_kind(completion["kind"])
 
-            return sublime.CompletionItem(
-                trigger=text, completion=text, annotation=annotation, kind=kind
+            # sublime text has complete the header bracket '<> or ""'
+            # remove it from clangd result
+            if completion["kind"] in (17, 19):
+                trigger = trigger.rstrip('>"')
+                text = text.rstrip('>"')
+                annotation = annotation.rstrip('>"')
+
+            return sublime.CompletionItem.snippet_completion(
+                trigger=trigger, snippet=text, annotation=annotation, kind=kind
             )
 
         self._cached_completion = [build_completion(c) for c in items]
@@ -368,7 +374,13 @@ class Client(api.BaseHandler):
                     "textDocument": {
                         "hover": {
                             "contentFormat": ["markdown", "plaintext"],
-                        }
+                        },
+                        "completion": {
+                            "completionItem": {
+                                "snippetSupport": True,
+                            },
+                            "insertTextMode": 2,
+                        },
                     }
                 },
             },
@@ -804,6 +816,15 @@ class ViewEventListener(sublime_plugin.ViewEventListener):
             word = self.view.word(self.prev_completion_loc)
             if point == self.prev_completion_loc:
                 show = True
+                # this trick needed because clangd return completion after puctuation
+                if text := self.view.substr(word).strip():
+                    if text == "::":
+                        show = True
+                    elif ";" in text:
+                        show = False
+                    elif ":" in text:
+                        show = False
+
             elif self.view.substr(word).isidentifier() and point in word:
                 show = True
 
