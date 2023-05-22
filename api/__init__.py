@@ -205,6 +205,8 @@ class Transport:
 
         if LOGGER.level == logging.DEBUG:
             command.append("--log=verbose")
+        else:
+            command.append("--log=error")
 
         self._server_process = subprocess.Popen(
             command,
@@ -245,7 +247,7 @@ class Transport:
         self._run_server_event.wait()
 
         while line := self._server_process.stderr.readline():
-            print(f"..{line.strip().decode()}")
+            print(f"[clangd] {line.strip().decode()}")
 
         # enforce server terminated
         self.terminate_server()
