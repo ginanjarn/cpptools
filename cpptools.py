@@ -481,9 +481,11 @@ class ClangdHandler(api.BaseHandler):
                 "textDocument/didClose",
                 {"textDocument": {"uri": document.document_uri()}},
             )
-            del self.working_documents[file_name]
-            # remove diagnostics
-            del self.diagnostics_map[file_name]
+            try:
+                del self.working_documents[file_name]
+                del self.diagnostics_map[file_name]
+            except KeyError:
+                pass
             self.diagnostics_panel.show()
 
     @wait_initialized
